@@ -1,0 +1,19 @@
+mkdir -p build
+nasm src/bootloader/boot.asm -f bin -o build/bootloader.bin
+nasm src/kernel/main.asm -f bin -o build/kernel.bin
+dd if=/dev/zero of=build/main_floppy.img bs=512 count=2880
+2880+0 records in
+2880+0 records out
+1474560 bytes transferred in 0.018081 secs (81553011 bytes/sec)
+/usr/local/sbin/mkfs.fat -F 12 -n "OrexOS" build/main_floppy.img
+mkfs.fat: Warning: lowercase labels might not work properly on some systems
+mkfs.fat 4.2 (2021-01-31)
+dd if=build/bootloader.bin of=build/main_floppy.img conv=notrunc bs=1 count=3
+3+0 records in
+3+0 records out
+3 bytes transferred in 0.000088 secs (34091 bytes/sec)
+dd if=build/bootloader.bin of=build/main_floppy.img conv=notrunc bs=1 count=448 skip=62 seek=62
+448+0 records in
+448+0 records out
+448 bytes transferred in 0.002375 secs (188632 bytes/sec)
+mcopy -i build/main_floppy.img build/kernel.bin "::kernel.bin"

@@ -1,0 +1,21 @@
+# How much memory the emulated machine has
+megs: 128
+
+# BIOS images - Updated for Intel Mac Homebrew paths
+romimage: file=/usr/local/share/bochs/BIOS-bochs-latest
+vgaromimage: file=/usr/local/Cellar/bochs/3.0/share/bochs/VGABIOS-lgpl-latest.bin
+
+# What is the boot disk? 
+floppya: 1_44="build/main_floppy.img", status=inserted
+boot: floppy
+
+# Logging
+log: bochsout.txt
+magic_break: enabled=1
+gdbstub: enabled=1, port=1234, text_base=0, data_base=0, bss_base=0
+# Mouse and clock settings
+mouse: enabled=0
+clock: sync=realtime, time0=local
+
+# Display library
+display_library: sdl2
