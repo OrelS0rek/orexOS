@@ -6,32 +6,31 @@ CC = i686-elf-gcc
 LD = i686-elf-ld
 OBJCOPY = i686-elf-objcopy
 
-# Dynamically find mkfs.fat in common macOS Homebrew locations
 MKFS = $(shell which mkfs.fat || \
                ls /usr/local/sbin/mkfs.fat 2>/dev/null || \
                ls /opt/homebrew/sbin/mkfs.fat 2>/dev/null || \
                echo "mkfs.fat_not_found")
 
-# You confirmed this one is in /usr/local/bin/mcopy
 MCOPY = /usr/local/bin/mcopy
-# Directories
+
+# dirs
 SRC_DIR = src
 BUILD_DIR = build
 BOOT_DIR = $(SRC_DIR)/bootloader
 KERNEL_DIR = $(SRC_DIR)/kernel
 KERNEL_ARCH_DIR = $(KERNEL_DIR)/arch/i386
 
-# Output files
+# output files
 BOOTLOADER_BIN = $(BUILD_DIR)/bootloader.bin
 KERNEL_BIN = $(BUILD_DIR)/kernel.bin
 FLOPPY_IMG = $(BUILD_DIR)/main_floppy.img
 
-# Source files
+# code files
 BOOT_ASM = $(BOOT_DIR)/boot.asm
 KERNEL_ENTRY_ASM = $(KERNEL_ARCH_DIR)/boot.asm
 KERNEL_MAIN_C = $(KERNEL_DIR)/main.c
 
-# Object files
+# object files
 KERNEL_ENTRY_OBJ = $(BUILD_DIR)/kernel_entry.o
 KERNEL_MAIN_OBJ = $(BUILD_DIR)/kernel_main.o
 
@@ -46,11 +45,11 @@ CFLAGS = -m32 -ffreestanding -fno-pie -nostdlib -nostdinc \
 # Linker flags
 LDFLAGS = -m elf_i386 -T linker.ld
 
-# Default target
+# target
 .PHONY: all
 all: floppy_image
 
-# Create floppy image
+# create floppy image
 .PHONY: floppy_image
 floppy_image: $(FLOPPY_IMG)
 
@@ -65,32 +64,32 @@ $(FLOPPY_IMG): $(BOOTLOADER_BIN) $(KERNEL_BIN)
 	dd if=$(BOOTLOADER_BIN) of=$@ conv=notrunc bs=1 count=448 skip=62 seek=62 2>/dev/null
 	# Copy the kernel onto the disk
 	$(MCOPY) -i $@ $(KERNEL_BIN) "::kernel.bin"
-	@echo "✓ Floppy image created: $@"
+	@echo "+ Floppy image created: $@"
 
 # Build bootloader (assembly)
 $(BOOTLOADER_BIN): $(BOOT_ASM) always
 	@echo "Assembling bootloader..."
 	$(ASM) $< -f bin -o $@
-	@echo "✓ Bootloader built: $@"
+	@echo "+ Bootloader built: $@"
 
 # Build kernel
 $(KERNEL_BIN): $(KERNEL_ENTRY_OBJ) $(KERNEL_MAIN_OBJ) linker.ld
 	@echo "Linking kernel..."
 	$(LD) $(LDFLAGS) $(KERNEL_ENTRY_OBJ) $(KERNEL_MAIN_OBJ) -o $(BUILD_DIR)/kernel.elf
 	$(OBJCOPY) -O binary $(BUILD_DIR)/kernel.elf $@
-	@echo "✓ Kernel linked: $@"
+	@echo "+ Kernel linked: $@"
 
-# Compile kernel entry (assembly)
+# Compile kernel entry 
 $(KERNEL_ENTRY_OBJ): $(KERNEL_ENTRY_ASM) always
 	@echo "Assembling kernel entry..."
 	$(ASM) $< -f elf32 -o $@
-	@echo "✓ Kernel entry assembled"
+	@echo "+ Kernel entry assembled"
 
-# Compile kernel main (C)
+# Compile kernel main 
 $(KERNEL_MAIN_OBJ): $(KERNEL_MAIN_C) always
 	@echo "Compiling kernel main (C)..."
 	$(CC) $(CFLAGS) -c $< -o $@
-	@echo "✓ Kernel main compiled"
+	@echo "+ Kernel main compiled"
 
 # Create build directory
 .PHONY: always
@@ -102,34 +101,10 @@ always:
 clean:
 	@echo "Cleaning build directory..."
 	rm -rf $(BUILD_DIR)/*
-	@echo "✓ Clean complete"
+	@echo "+ Clean complete"
 
 # Run in QEMU
 .PHONY: run
 run: floppy_image
 	@echo "Starting QEMU..."
 	qemu-system-i386 -fda $(FLOPPY_IMG) -boot a -d cpu_reset,int -D qemu.log -no-reboot
-# Run with debugging
-.PHONY: debug
-debug: floppy_image
-	@echo "Starting QEMU in debug mode..."
-	qemu-system-i386 -fda $(FLOPPY_IMG) -boot a -s -S
-
-# Show disk contents
-.PHONY: inspect
-inspect: floppy_image
-	@echo "=== Disk Contents ==="
-	mdir -i $(FLOPPY_IMG) ::
-
-# Help
-.PHONY: help
-help:
-	@echo "OrexOS Build System"
-	@echo ""
-	@echo "Targets:"
-	@echo "  all (default) - Build everything"
-	@echo "  clean         - Remove build artifacts"
-	@echo "  run           - Build and run in QEMU"
-	@echo "  debug         - Build and run in debug mode"
-	@echo "  inspect       - Show files on disk image"
-	@echo "  help          - Show this help"
