@@ -3,49 +3,41 @@ section .entry
 global _start
 extern kmain
 
+%define KERNEL_PHYS_BASE 0x20000
+
 _start:
     cli
-    ; Standardize segments for 0x2000:0000
     mov ax, 0x2000
     mov ds, ax
     mov es, ax
     mov ss, ax
     mov sp, 0xFFF0
 
-    ; Enable A20 (Fast A20)
+    ;enabling A20 line , to be able to access more than 1mb
+
     in al, 0x92
-    or al, 2
+    or al, 2                        ; setting port 0x92 bit 1
     out 0x92, al
 
-    ; --- THE FIX FOR THE RELOCATION ERROR ---
-    ; We manually calculate the offset relative to the start of the section.
-    ; This bypasses the Linker's 32-bit relocation records.
+    mov eax, KERNEL_PHYS_BASE       ;absolute physical base address to store in GDT
+    add eax, (gdt_start - _start)
     
-    mov eax, 0x20000            ; Base physical address (0x2000 << 4)
-    mov ebx, gdt_start          ; Get the offset of gdt_start
-    sub ebx, _start             ; Subtract start of section to get local offset
-    add eax, ebx                ; Physical address = Base + Local Offset
-    
-    ; We do the same for the descriptor pointer
-    mov edi, gdt_descriptor
-    sub edi, _start             ; Local offset of the descriptor
-    
-    mov [ds:edi + 2], eax       ; Plug the physical address into the GDT descriptor
+    mov bx, (gdt_descriptor - _start) ;offset of GDT from start of kernel
+    mov [bx + 2], eax
 
-    ; Load GDT using the local offset
-    lgdt [ds:edi]
+    lgdt [bx]                       ; loads gdt descriptor into GDTR register
 
-    ; Switch to Protected Mode
-    mov eax, cr0
+    mov eax, cr0                    
     or eax, 1
-    mov cr0, eax
+    mov cr0, eax                    ; the actual conversion to protected mode ()
 
-    ; Far Jump to 32-bit code
-    ; 0x08 is the Code Selector
-    jmp 0x08:init_pm
+
+    db 0x66, 0xEA
+    dd (KERNEL_PHYS_BASE + (init_pm_32 - _start))
+    dw 0x08
 
 [bits 32]
-init_pm:
+init_pm_32:
     mov ax, 0x10
     mov ds, ax
     mov ss, ax
@@ -53,22 +45,23 @@ init_pm:
     mov fs, ax
     mov gs, ax
 
-    ; Blue 'P' for Success
     mov word [0xB8000], 0x1F50 
 
-    mov ebp, 0x90000
-    mov esp, ebp
+    mov esp, 0x90000
+    mov ebp, esp
+    
     call kmain
     
     cli
+.halt:
     hlt
+    jmp .halt
 
-; --- DATA MUST BE INSIDE THE SAME SECTION ---
-align 4
+align 16
 gdt_start:
-    dq 0x0000000000000000   ; Null
-    dq 0x00CF9A000000FFFF   ; Code (0x08)
-    dq 0x00CF92000000FFFF   ; Data (0x10)
+    dq 0x0000000000000000
+    dq 0x00CF9A000000FFFF
+    dq 0x00CF92000000FFFF
 gdt_end:
 
 gdt_descriptor:

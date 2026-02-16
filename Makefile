@@ -108,8 +108,7 @@ clean:
 .PHONY: run
 run: floppy_image
 	@echo "Starting QEMU..."
-	qemu-system-i386 -fda $(FLOPPY_IMG) -boot a
-
+	qemu-system-i386 -fda $(FLOPPY_IMG) -boot a -d cpu_reset,int -D qemu.log -no-reboot
 # Run with debugging
 .PHONY: debug
 debug: floppy_image
