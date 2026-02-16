@@ -6,7 +6,7 @@ ENTRY(_start)
 SECTIONS
 {
     /* Kernel loaded at 0x20000 (physical address) */
-    . = 0x20000;
+    . = 0x0000;
     .entry : { *(.entry) }
     .text  : { *(.text) }
     .rodata : ALIGN(4096)
