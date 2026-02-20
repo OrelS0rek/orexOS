@@ -21,8 +21,7 @@ This is a learning project focused on understanding operating systems at the har
 - **Real Mode -> Protected Mode Transition**
   - A20 line enabling for full 32-bit addressing
   - Global Descriptor Table (GDT) setup with code and data segments
-  - Far jump to flush instruction pipeline and enter protected mode
-- **VGA Text Mode Driver** — direct memory-mapped I/O  for display output
+- **VGA Text Mode Driver** — direct memory-mapped I/O  for display 
 - **C Kernel** — kernel changes from assembly to C at `kmain()`
 
 ## Details
