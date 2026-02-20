@@ -33,7 +33,7 @@ This is a learning project focused on understanding operating systems at the har
 **Memory Model:** Flat segmentation (sements overlapped in memory, but change base on flags and permissions)  
 **Emulator:** QEMU i386 (1.44MB floppy disk image)  
 
-## 📋 Build Requirements
+##  Build Requirements
 
 - `nasm` — assembler for bootloader and kernel entry
 - `i686-elf-gcc` — cross-compiler for freestanding C code
@@ -41,7 +41,7 @@ This is a learning project focused on understanding operating systems at the har
 - `dosfstools` — FAT filesystem utilities (mkfs.fat, mcopy)
 - `qemu-system-i386` — emulator for testing
 
-## 🔨 Building & Running
+##  Building & Running
 
 ```bash
 # Build the OS
