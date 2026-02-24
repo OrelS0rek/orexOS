@@ -30,7 +30,7 @@ echo -e "${YELLOW}Press Ctrl+C to exit${NC}\n"
 
 # Run QEMU with serial output redirected to terminal
 qemu-system-x86_64 \
-    -fda build/main_floppy.img \
+    -fda ../build/main_floppy.img \
     -boot a \
     -serial stdio \
     -no-reboot \

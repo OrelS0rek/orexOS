@@ -19,7 +19,7 @@ _start:
     or al, 2                        ; setting port 0x92 bit 1
     out 0x92, al
 
-    mov eax, KERNEL_PHYS_BASE       ;absolute physical base address to store in GDT
+    mov eax, KERNEL_PHYS_BASE       ; physical base address to store in GDT
     add eax, (gdt_start - _start)
     
     mov bx, (gdt_descriptor - _start) ;offset of GDT from start of kernel
