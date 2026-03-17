@@ -150,6 +150,12 @@ main:
 	hlt
 	jmp .halt
 
+
+;C = LBA ÷ (HPC × SPT)
+;H = (LBA ÷ SPT) mod HPC
+;S = (LBA mod SPT) + 1
+
+
 lba_to_chs:
 	push ax
 	push dx
@@ -180,6 +186,7 @@ disk_read:
 	mov ah, 02h
 	mov dl, [ebr_drive_number]
 	mov di, 3
+	
 .retry:
 	pusha
 	stc

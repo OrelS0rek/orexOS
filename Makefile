@@ -12,11 +12,11 @@ SRC_DIR   = src
 BUILD_DIR = build
 KERNEL_DIR = $(SRC_DIR)/kernel
 
-# Auto-find ALL .c files in kernel directory (recursive)
+# find .c files
 C_SOURCES = $(shell find $(KERNEL_DIR) -name '*.c')
 
-# Convert .c paths to .o paths in build directory
-# src/kernel/drivers/vga.c → build/drivers/vga.o
+# make c file o files
+# src/kernel/drivers/vga.c -> build/drivers/vga.o
 C_OBJECTS = $(patsubst $(KERNEL_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
 
 # Output files
@@ -25,6 +25,7 @@ KERNEL_BIN     = $(BUILD_DIR)/kernel.bin
 FLOPPY_IMG     = $(BUILD_DIR)/main_floppy.img
 
 KERNEL_ENTRY_OBJ = $(BUILD_DIR)/kernel_entry.o
+KERNEL_ASM_OBJECTS = $(BUILD_DIR)/cpu/idt_asm.o
 
 GCC_INTERNAL_INC := $(shell $(CC) -print-file-name=include)
 
@@ -50,21 +51,26 @@ $(FLOPPY_IMG): $(BOOTLOADER_BIN) $(KERNEL_BIN)
 	dd if=$(BOOTLOADER_BIN) of=$@ conv=notrunc bs=1 count=3 2>/dev/null
 	dd if=$(BOOTLOADER_BIN) of=$@ conv=notrunc bs=1 count=448 skip=62 seek=62 2>/dev/null
 	$(MCOPY) -i $@ $(KERNEL_BIN) "::kernel.bin"
-	@echo "✓ Floppy image: $@"
+	@echo " Floppy image: $@"
 
 # Bootloader
 $(BOOTLOADER_BIN): $(SRC_DIR)/bootloader/boot.asm | always
 	$(ASM) $< -f bin -o $@
 
-# Kernel binary
-$(KERNEL_BIN): $(KERNEL_ENTRY_OBJ) $(C_OBJECTS) linker.ld
-	@echo "Linking kernel..."
-	$(LD) $(LDFLAGS) $(KERNEL_ENTRY_OBJ) $(C_OBJECTS) -o $(BUILD_DIR)/kernel.elf
-	$(OBJCOPY) -O binary $(BUILD_DIR)/kernel.elf $@
-
-# Kernel entry (assembly)
+# Kernel entry
 $(KERNEL_ENTRY_OBJ): $(KERNEL_DIR)/arch/i386/boot.asm | always
 	$(ASM) $< -f elf32 -o $@
+
+# Kernel ASM objects
+$(BUILD_DIR)/cpu/idt_asm.o: $(KERNEL_DIR)/cpu/idt.asm | always
+	@mkdir -p $(dir $@)
+	$(ASM) $< -f elf32 -o $@
+
+# Kernel binary
+$(KERNEL_BIN): $(KERNEL_ENTRY_OBJ) $(KERNEL_ASM_OBJECTS) $(C_OBJECTS) linker.ld
+	@echo "Linking kernel.."
+	$(LD) $(LDFLAGS) $(KERNEL_ENTRY_OBJ) $(KERNEL_ASM_OBJECTS) $(C_OBJECTS) -o $(BUILD_DIR)/kernel.elf
+	$(OBJCOPY) -O binary $(BUILD_DIR)/kernel.elf $@
 
 # Compile ANY .c file found under src/kernel/
 # This rule handles all subdirectories automatically

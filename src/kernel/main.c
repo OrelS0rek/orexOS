@@ -1,6 +1,7 @@
 // src/kernel/main.c
 #include <stdint.h>
 #include "vga.h"
+#include "idt.h"
 
 void kmain(void) {
     uint8_t bg_color = vga_color(COLOR_BLUE, COLOR_WHITE);
@@ -21,6 +22,6 @@ void kmain(void) {
 
     uint8_t success_color = vga_color(COLOR_BLUE, COLOR_LIGHT_GREEN);
     vga_print_at("Kernel complete!", 20, 20, success_color);
-
+    initIdt();
     while (1) { __asm__ volatile("hlt"); }
 }

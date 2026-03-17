@@ -4,7 +4,6 @@ global _start
 extern kmain
 
 %define KERNEL_PHYS_BASE 0x20000
-
 _start:
     cli
     mov ax, 0x2000
@@ -59,11 +58,19 @@ init_pm_32:
 
 align 16
 gdt_start:
-    dq 0x0000000000000000
-    dq 0x00CF9A000000FFFF
-    dq 0x00CF92000000FFFF
+    dq 0x0000000000000000 ;null descriptor
+    dq 0x00CF9A000000FFFF ;kernel code segment (ring 0 permissions)
+    dq 0x00CF92000000FFFF ;kernel data segment (ring 0 permissions)
 gdt_end:
 
 gdt_descriptor:
     dw gdt_end - gdt_start - 1
     dd 0
+
+
+;gdt intel breakdown : code segment example
+;Limit (low):   0xFFFF        (bytes 0-1)
+;Base (low):    0x000000      (bytes 2-4)
+;Access:        0x9A          (byte 5)
+;Limit (high) + Flags: 0xCF  (byte 6)
+;Base (high):   0x00          (byte 7)
