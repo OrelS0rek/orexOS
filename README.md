@@ -55,8 +55,8 @@ make clean
 
 ##  Roadmap
 
-- [ ] Interrupt Descriptor Table (IDT) for exception handling
-- [ ] Keyboard driver 
+- [x] Interrupt Descriptor Table (IDT) for exception handling
+- [x] Keyboard driver 
 - [ ] Physical memory manager (page frame allocator)
 - [ ] Heap allocator (malloc/free)
 - [ ] Virtual memory (paging)
