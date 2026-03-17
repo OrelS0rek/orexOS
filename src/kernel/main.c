@@ -2,8 +2,13 @@
 #include <stdint.h>
 #include "vga.h"
 #include "idt.h"
+#include "keyboard.h"
+
+void keyboard_init();
 
 void kmain(void) {
+    keyboard_init();
+    initIdt();
     uint8_t bg_color = vga_color(COLOR_BLUE, COLOR_WHITE);
     vga_clear(bg_color);
     
@@ -22,6 +27,6 @@ void kmain(void) {
 
     uint8_t success_color = vga_color(COLOR_BLUE, COLOR_LIGHT_GREEN);
     vga_print_at("Kernel complete!", 20, 20, success_color);
-    initIdt();
+    __asm__ volatile("sti");
     while (1) { __asm__ volatile("hlt"); }
 }

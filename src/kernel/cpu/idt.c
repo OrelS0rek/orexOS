@@ -1,5 +1,5 @@
-#ifndef IDT_H
-#define IDT_H
+#ifndef IDT_C
+#define IDT_C
 
 #include <stdint.h>
 #include "util.h"
@@ -17,7 +17,7 @@ void initIdt(){
     idt_ptr.base = (uint32_t) &idt_entries;
 
     memset(&idt_entries, 0, sizeof(struct idt_entry_struct)*256);
-
+    //PIC remapping - Programmable interrupt Controller
     outPortB(0x20, 0x11);
     outPortB(0xA0, 0x11);
 
@@ -86,9 +86,9 @@ void initIdt(){
 
     
 
-    setIdtGate(128, (uint32_t)isr128,0x08,0x8E); //system calls
-    setIdtGate(177, (uint32_t)isr177,0x08,0x8E); //system calls
-
+    setIdtGate(128, (uint32_t)isr128,0x08,0xEE); //system calls
+    setIdtGate(177, (uint32_t)isr177,0x08,0xEE); //system calls
+    //system calls have flags EE for ring 3 (user privilage)
 
     //0x8E -> 1000 1110 ,1000 representing the present bit, DPL. 1110 representing the Gate type E. 
     //0x08 -> 0000 1000 representing the code segment (selector pointing to the code segment in GDT)
@@ -100,7 +100,7 @@ void setIdtGate(uint8_t num,uint32_t base, uint16_t sel, uint8_t flags){
     idt_entries[num].base_high = (base >> 16) & 0xFFFF;
     idt_entries[num].sel = sel;
     idt_entries[num].always0 = 0;
-    idt_entries[num].flags = flags | 0x60;
+    idt_entries[num].flags = flags;
 }
 
 const char* exception_messages[] = {
